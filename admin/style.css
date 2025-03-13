@@ -1,0 +1,229 @@
+/* style.css */
+:root {
+    --success-color: #4caf50;
+    --success-bg: #e8f5e9;
+    --danger-color: #f44336;
+    --danger-bg: #ffebee;
+    --text-muted: #666;
+}
+
+/* Allgemeine Styles */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+}
+
+.container {
+    max-width: 1400px;
+    padding: 1rem;
+}
+
+/* Header */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.app-header h1 {
+    margin: 0;
+}
+
+.app-header h1 a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.logo-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    gap: 0.5rem;
+}
+
+.logo-image {
+    height: 2rem; /* Anpassen je nach gewünschter Größe */
+    width: auto;
+    vertical-align: middle;
+}
+
+.user-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-email {
+    color: var(--text-muted);
+}
+
+/* Buttons */
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+.btn-close {
+    display: inline-block;
+    width: 1.5rem;
+    height: 1.5rem;
+    background-color: #f0f0f0;
+    color: #333;
+    font-size: 1.2rem;
+    line-height: 1.5rem;
+    text-align: center;
+    border-radius: 50%;
+    text-decoration: none;
+}
+
+.btn-close:hover {
+    background-color: #e0e0e0;
+}
+
+/* Projekt-Karten */
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.project-card {
+    text-decoration: none;
+    color: inherit;
+}
+
+.project-card article {
+    height: 100%;
+    transition: all 0.2s ease;
+}
+
+.project-card article:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* SQL Editor Layout */
+.single-column {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* SQL Editor */
+.sql-editor textarea {
+    font-family: monospace;
+    resize: vertical;
+    min-height: 150px;
+}
+
+/* Editor-Header */
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.table-header h2 {
+    margin: 0;
+}
+
+/* Tabellen-Liste */
+.tables-simple {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: var(--pico-table-row-stripped-background-color);
+    border-radius: 0.25rem;
+}
+
+.table-item {
+    font-size: 0.9rem;
+    font-family: monospace;
+    line-height: 1.2;
+}
+
+.table-item:last-child {
+    border-bottom: none;
+}
+
+.table-title {
+    font-weight: bold;
+}
+
+.table-columns {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* Ergebnisse */
+.results-container {
+    margin-top: 1.5rem;
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.results-header h2 {
+    margin: 0;
+}
+
+.table-container {
+    overflow-x: auto;
+    margin-top: 1rem;
+}
+
+/* Alerts */
+.alert {
+    padding: 0.75rem 1rem;
+    border-radius: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+.alert-success {
+    color: var(--success-color);
+    background-color: var(--success-bg);
+    border: 1px solid var(--success-color);
+}
+
+.alert-danger {
+    color: var(--danger-color);
+    background-color: var(--danger-bg);
+    border: 1px solid var(--danger-color);
+}
+
+/* Footer */
+footer {
+    text-align: center;
+}
+
+/* Responsive Anpassungen */
+
+@media (max-width: 768px) {
+    .app-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .user-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
