@@ -1,0 +1,5 @@
+# Umgebungsvariablen
+.env
+
+# Docker-Volumes
+data/

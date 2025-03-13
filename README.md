@@ -50,11 +50,9 @@ Ein einfacher SQL-Editor für NocoDB, mit dem Sie SQL-Abfragen direkt gegen die 
 
 ### Sicherheitseinstellungen
 
-#### Registrierung deaktivieren
-
 Die Benutzerregistrierung kann auf zwei Arten deaktiviert werden:
 
-1. **In der Docker-Konfiguration** (empfohlen):
+1. **In der Docker-Konfiguration** ([Bug](https://github.com/nocodb/nocodb/issues/7814)):
    ```yaml
    environment:
      NC_INVITE_ONLY_SIGNUP: 1
@@ -65,6 +63,24 @@ Die Benutzerregistrierung kann auf zwei Arten deaktiviert werden:
    - Gehen Sie zu "Account" → "Settings"
    - Deaktivieren Sie die Option "Enable Signup" 
    - Weitere Informationen: [NocoDB Dokumentation](https://docs.nocodb.com/account-settings/oss-specific-details/#enable--disable-signup)
+
+### Umgebungsvariablen
+
+Die Anwendung verwendet Umgebungsvariablen für alle Konfigurationseinstellungen. Diese können in der `.env`-Datei definiert werden:
+
+| Variable | Beschreibung | Standardwert |
+| --- | --- | --- |
+| `DB_HOST` | Datenbankhost | `root_db` |
+| `DB_USER` | Datenbankbenutzer | `root` |
+| `DB_PASSWORD` | Datenbankpasswort | `password` |
+| `DB_NAME` | Datenbankname | `nocodb` |
+| `ADMIN_EMAIL` | Admin-E-Mail für NocoDB | `admin@example.com` |
+| `ADMIN_PASSWORD` | Admin-Passwort für NocoDB | `admin@example.com` |
+| `NOCODB_PORT` | Port für NocoDB | `80` |
+| `SQL_EDITOR_PORT` | Port für SQL Editor | `8081` |
+| `PHPMYADMIN_PORT` | Port für phpMyAdmin | `8080` |
+| `NC_PUBLIC_URL` | Öffentliche URL für NocoDB | `localhost` |
+| `DATA_DIR` | Verzeichnis für persistente Daten | `./data` |
 
 ## Verwendung
 
