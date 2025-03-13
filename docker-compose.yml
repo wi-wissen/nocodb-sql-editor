@@ -6,10 +6,10 @@ services:
       root_db: 
         condition: service_healthy
     environment:
-      NC_PUBLIC_URL: ${NC_PUBLIC_URL:-localhost}
+      NC_PUBLIC_URL: ${NC_PUBLIC_URL:-http://localhost}
       NC_DB: "mysql2://${DB_HOST:-root_db}:3306?u=${DB_USER:-root}&p=${DB_PASSWORD:-password}&d=${DB_NAME:-nocodb}"
-      NC_ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
-      NC_ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin@example.com}
+      NC_ADMIN_EMAIL: ${NC_ADMIN_EMAIL:-admin@example.com}
+      NC_ADMIN_PASSWORD: ${NC_ADMIN_PASSWORD:-admin@example.com}
       NC_INVITE_ONLY_SIGNUP: ${NC_INVITE_ONLY_SIGNUP:-1} # https://github.com/nocodb/nocodb/issues/7814
       NC_DISABLE_TELE: ${NC_DISABLE_TELE:-1}
     image: "nocodb/nocodb:latest"
@@ -43,10 +43,9 @@ services:
       - "${PHPMYADMIN_PORT:-8080}:80"
     environment:
       PMA_HOST: ${DB_HOST:-root_db}
-      PMA_USER: ${PMA_USER:-root}
-      PMA_PASSWORD: ${PMA_PASSWORD:-password}
-      # PMA_ABSOLUTE_URI: ${NC_PUBLIC_URL:-localhost}/phpmyadmin/
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-password}
+      # PMA_USER: ${DB_USER:-root}
+      # PMA_PASSWORD: ${DB_PASSWORD:-password}
+      PMA_ABSOLUTE_URI: ${PMA_PUBLIC_URL:-http://localhost:8080}
     restart: always
   
   php-webserver:
