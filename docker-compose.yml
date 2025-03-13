@@ -1,0 +1,68 @@
+version: '2.1'
+services: 
+  nocodb: 
+    depends_on: 
+      root_db: 
+        condition: service_healthy
+    environment:
+      NC_PUBLIC_URL: localhost
+      NC_DB: "mysql2://root_db:3306?u=root&p=password&d=nocodb"
+      NC_ADMIN_EMAIL: "admin@example.com"
+      NC_ADMIN_PASSWORD: "admin@example.com"
+      NC_INVITE_ONLY_SIGNUP: 1 # https://github.com/nocodb/nocodb/issues/7814
+      NC_DISABLE_TELE: 1
+    image: "nocodb/nocodb:latest"
+    ports: 
+      - "80:8080"
+    restart: always
+    volumes: 
+      - "nc_data:/usr/app/data"
+  root_db: 
+    environment: 
+      MARIADB_ROOT_PASSWORD: password
+      MARIADB_DATABASE: nocodb
+    image: mariadb:latest
+    restart: always
+    healthcheck: #https://mariadb.org/mariadb-server-docker-official-images-healthcheck-without-mysqladmin/
+        test: [ "CMD", "healthcheck.sh", "--su-mysql", "--connect", "--innodb_initialized" ]
+        start_period: 1m
+        start_interval: 10s
+        interval: 1m
+        timeout: 5s
+        retries: 3
+    volumes: 
+      - "db_data:/var/lib/mysql"
+  phpmyadmin:
+    depends_on:
+      - root_db
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: root_db
+      PMA_USER: root
+      PMA_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+    restart: always
+  php-webserver:
+    build: ./php
+    ports:
+      - "8081:80"
+    volumes:
+      - ./admin:/var/www/html
+    depends_on:
+      - root_db
+    environment:
+      - MYSQL_HOST=root_db
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=nocodb
+      - ADMIN_PASSWORD=admin123
+      - DOMAIN=example.com
+      - NOCODB_URL=http://nocodb:8080
+      - NOCODB_ADMIN_EMAIL=admin@example.com
+      - NOCODB_ADMIN_PASSWORD=admin@example.com
+    restart: always
+volumes: 
+  db_data: {}
+  nc_data: {}
