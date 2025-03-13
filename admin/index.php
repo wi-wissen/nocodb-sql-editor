@@ -8,7 +8,6 @@ $config = [
     'db_user' => getenv('MYSQL_USER') ?: 'root',
     'db_pass' => getenv('MYSQL_PASSWORD') ?: 'password',
     'db_name' => getenv('MYSQL_DATABASE') ?: 'nocodb',
-    'admin_password' => getenv('ADMIN_PASSWORD') ?: 'admin123'
 ];
 
 // Datenbankverbindung herstellen

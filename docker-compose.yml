@@ -1,4 +1,14 @@
 version: '2.1'
+
+# Gemeinsame Variablen für alle Dienste
+x-variables:
+  db_host: &db_host root_db
+  db_user: &db_user root
+  db_pass: &db_pass password
+  db_name: &db_name nocodb
+  admin_email: &admin_email admin@example.com
+  admin_password: &admin_password admin@example.com
+
 services: 
   nocodb: 
     depends_on: 
@@ -7,8 +17,8 @@ services:
     environment:
       NC_PUBLIC_URL: localhost
       NC_DB: "mysql2://root_db:3306?u=root&p=password&d=nocodb"
-      NC_ADMIN_EMAIL: "admin@example.com"
-      NC_ADMIN_PASSWORD: "admin@example.com"
+      NC_ADMIN_EMAIL: *admin_email
+      NC_ADMIN_PASSWORD: *admin_password
       NC_INVITE_ONLY_SIGNUP: 1 # https://github.com/nocodb/nocodb/issues/7814
       NC_DISABLE_TELE: 1
     image: "nocodb/nocodb:latest"
@@ -17,10 +27,11 @@ services:
     restart: always
     volumes: 
       - "nc_data:/usr/app/data"
+  
   root_db: 
     environment: 
-      MARIADB_ROOT_PASSWORD: password
-      MARIADB_DATABASE: nocodb
+      MARIADB_ROOT_PASSWORD: *db_pass
+      MARIADB_DATABASE: *db_name
     image: mariadb:latest
     restart: always
     healthcheck: #https://mariadb.org/mariadb-server-docker-official-images-healthcheck-without-mysqladmin/
@@ -32,6 +43,7 @@ services:
         retries: 3
     volumes: 
       - "db_data:/var/lib/mysql"
+  
   phpmyadmin:
     depends_on:
       - root_db
@@ -39,11 +51,13 @@ services:
     ports:
       - "8080:80"
     environment:
-      PMA_HOST: root_db
-      PMA_USER: root
-      PMA_PASSWORD: password
-      MYSQL_ROOT_PASSWORD: password
+      PMA_HOST: *db_host
+      PMA_USER: *db_user
+      PMA_PASSWORD: *db_pass
+      # PMA_ABSOLUTE_URI: "http://localhost/phpmyadmin/" Um unter /phpmyadmin zu funktionieren
+      MYSQL_ROOT_PASSWORD: *db_pass
     restart: always
+  
   php-webserver:
     build: ./php
     ports:
@@ -53,16 +67,12 @@ services:
     depends_on:
       - root_db
     environment:
-      - MYSQL_HOST=root_db
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=password
-      - MYSQL_DATABASE=nocodb
-      - ADMIN_PASSWORD=admin123
-      - DOMAIN=example.com
-      - NOCODB_URL=http://nocodb:8080
-      - NOCODB_ADMIN_EMAIL=admin@example.com
-      - NOCODB_ADMIN_PASSWORD=admin@example.com
+      MYSQL_HOST: *db_host
+      MYSQL_USER: *db_user
+      MYSQL_PASSWORD: *db_pass
+      MYSQL_DATABASE: *db_name
     restart: always
+
 volumes: 
   db_data: {}
   nc_data: {}

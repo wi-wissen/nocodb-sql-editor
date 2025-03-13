@@ -1,0 +1,100 @@
+server {
+  listen 80;
+  listen [::]:80;
+  listen 443 ssl http2;
+  listen [::]:443 ssl http2;
+  {{ssl_certificate_key}}
+  {{ssl_certificate}}
+  server_name your-domain.example.com;
+  {{root}}
+
+  {{nginx_access_log}}
+  {{nginx_error_log}}
+
+  if ($scheme != "https") {
+    rewrite ^ https://$host$uri permanent;
+  }
+
+  # Standard-Proxy-Einstellungen
+  location @nocodb_proxy {
+    proxy_pass http://localhost:80;
+    proxy_http_version 1.1;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Server $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host $http_host;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "Upgrade";
+    proxy_pass_request_headers on;
+    proxy_max_temp_file_size 0;
+    proxy_connect_timeout 900;
+    proxy_send_timeout 900;
+    proxy_read_timeout 900;
+    proxy_buffer_size 128k;
+    proxy_buffers 4 256k;
+    proxy_busy_buffers_size 256k;
+    proxy_temp_file_write_size 256k;
+  }
+
+  # SQL Editor auf /sql
+  location /sql {
+    proxy_pass http://localhost:8081;
+    proxy_http_version 1.1;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Server $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host $http_host;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "Upgrade";
+    proxy_pass_request_headers on;
+    proxy_connect_timeout 900;
+    proxy_send_timeout 900;
+    proxy_read_timeout 900;
+    proxy_buffer_size 128k;
+    proxy_buffers 4 256k;
+    proxy_busy_buffers_size 256k;
+    proxy_temp_file_write_size 256k;
+  }
+
+  # phpMyAdmin auf /phpmyadmin
+  location /phpmyadmin {
+    proxy_pass http://localhost:8080;
+    proxy_http_version 1.1;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Server $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host $http_host;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "Upgrade";
+    proxy_pass_request_headers on;
+    proxy_connect_timeout 900;
+    proxy_send_timeout 900;
+    proxy_read_timeout 900;
+    proxy_buffer_size 128k;
+    proxy_buffers 4 256k;
+    proxy_busy_buffers_size 256k;
+    proxy_temp_file_write_size 256k;
+  }
+
+  {{settings}}
+
+  add_header Cache-Control no-transform;
+
+  index index.html;
+
+  location ^~ /.well-known {
+    auth_basic off;
+    allow all;
+    try_files $uri @nocodb_proxy;
+  }
+
+  location / {
+    try_files $uri @nocodb_proxy;
+  }
+}
