@@ -8,7 +8,14 @@ $config = [
     'db_user' => getenv('MYSQL_USER') ?: 'root',
     'db_pass' => getenv('MYSQL_PASSWORD') ?: 'password',
     'db_name' => getenv('MYSQL_DATABASE') ?: 'nocodb',
+    'base_path' => getenv('BASE_PATH') ?: '',  // Hinzugefügt: Base Path für nicht-Root Installationen
 ];
+
+// Hilfs-Funktion für URL-Pfade
+function basePath($path = '') {
+    global $config;
+    return $config['base_path'] . $path;
+}
 
 // Datenbankverbindung herstellen
 function connectDB() {
@@ -53,8 +60,8 @@ function getUserProjects($userId) {
     $db = connectDB();
     $stmt = $db->prepare("
         SELECT p.id, p.title, p.description
-        FROM nc_projects_v2 p
-        JOIN nc_project_users_v2 pu ON p.id = pu.project_id
+        FROM nc_bases_v2 p
+        JOIN nc_base_users_v2 pu ON p.id = pu.base_id
         WHERE pu.fk_user_id = ? AND p.deleted != 1
         ORDER BY p.title
     ");
@@ -68,7 +75,7 @@ function getProjectTables($projectId) {
     $stmt = $db->prepare("
         SELECT id, table_name, title, type, meta
         FROM nc_models_v2
-        WHERE project_id = ? AND deleted IS NULL AND type = 'table'
+        WHERE base_id = ? AND deleted IS NULL AND type = 'table'
         ORDER BY title
     ");
     $stmt->execute([$projectId]);
@@ -138,7 +145,7 @@ function executeSQL($sql, $tables) {
 // Logout
 if (isset($_GET['logout'])) {
     session_destroy();
-    header('Location: /');
+    header('Location: ' . basePath('/'));
     exit;
 }
 
@@ -148,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     if (!empty($_POST['email']) && !empty($_POST['password'])) {
         $result = loginUser($_POST['email'], $_POST['password']);
         if ($result['success']) {
-            header('Location: /');
+            header('Location: ' . basePath('/'));
             exit;
         } else {
             $loginError = $result['message'];
@@ -162,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 if (isset($_GET['projects'])) {
     unset($_SESSION['current_project']);
     unset($_SESSION['project_tables']);
-    header('Location: /');
+    header('Location: ' . basePath('/'));
     exit;
 }
 
@@ -181,7 +188,7 @@ if (isset($_GET['project'])) {
         
         $_SESSION['project_tables'] = $tables;
     }
-    header('Location: /');
+    header('Location: ' . basePath('/'));
     exit;
 }
 
@@ -202,7 +209,7 @@ if (isset($_GET['clear_results'])) {
         $_SESSION['last_sql'] = $_POST['sql'];
     }
     $sqlResult = null;
-    header('Location: /');
+    header('Location: ' . basePath('/'));
     exit;
 }
 
@@ -213,15 +220,15 @@ include('header.php');
 <main class="container">
     <header class="app-header">
         <h1>
-            <a href="/" class="logo-link">
-                <img src="apple-touch-icon.png" alt="NocoDB SQL Editor" class="logo-image">
+            <a href="<?= basePath('/') ?>" class="logo-link">
+                <img src="<?= basePath('/apple-touch-icon.png') ?>" alt="NocoDB SQL Editor" class="logo-image">
                 <span>NocoDB SQL Editor</span>
             </a>
         </h1>
         <?php if (isset($_SESSION['user_id'])): ?>
         <div class="user-actions">
             <span class="user-email"><?= htmlspecialchars($_SESSION['user_email']) ?></span>
-            <a href="?logout=1" role="button" class="secondary btn-sm">Abmelden</a>
+            <a href="<?= basePath('/?logout=1') ?>" role="button" class="secondary btn-sm">Abmelden</a>
         </div>
         <?php endif; ?>
     </header>
@@ -234,7 +241,7 @@ include('header.php');
                 <div class="alert alert-danger"><?= htmlspecialchars($loginError) ?></div>
             <?php endif; ?>
             
-            <form method="post" action="">
+            <form method="post" action="<?= basePath('/') ?>">
                 <input type="hidden" name="action" value="login">
                 <div class="grid">
                     <label for="email">
@@ -260,7 +267,7 @@ include('header.php');
                 if ($projects): 
                     foreach ($projects as $project): 
                 ?>
-                    <a href="?project=<?= htmlspecialchars($project['id']) ?>" class="project-card">
+                    <a href="<?= basePath('/?project=' . htmlspecialchars($project['id'])) ?>" class="project-card">
                         <article>
                             <header><?= htmlspecialchars($project['title']) ?></header>
                             <p><?= htmlspecialchars($project['description'] ?? 'Keine Beschreibung') ?></p>
@@ -277,7 +284,7 @@ include('header.php');
             <!-- SQL-Editor Bereich -->
             <div class="single-column">
                 <article class="sql-editor">                    
-                    <form method="post" action="">
+                    <form method="post" action="<?= basePath('/') ?>">
                         <input type="hidden" name="action" value="execute_sql">
                         <textarea name="sql" rows="6" placeholder="SELECT * FROM TabellenName LIMIT 10;"><?= $_POST['sql'] ?? $_SESSION['last_sql'] ?? '' ?></textarea>
                         <button type="submit">Ausführen</button>
@@ -288,7 +295,7 @@ include('header.php');
                     <article class="results-container">
                         <div class="results-header">
                             <h2>Ergebnisse</h2>
-                            <a href="?clear_results=1" class="btn-close" title="Ergebnisse löschen">×</a>
+                            <a href="<?= basePath('/?clear_results=1') ?>" class="btn-close" title="Ergebnisse löschen">×</a>
                         </div>
                         
                         <?php if ($sqlResult['success']): ?>
@@ -330,7 +337,7 @@ include('header.php');
                 <article class="tables-list">
                     <div class="table-header">
                         <h2>Tabellen</h2>
-                        <a href="?projects=1" role="button" class="secondary btn-sm">Projektauswahl</a>
+                        <a href="<?= basePath('/?projects=1') ?>" role="button" class="secondary btn-sm">Projektauswahl</a>
                     </div>
                     <div class="tables-simple">
                         <?php foreach ($_SESSION['project_tables'] as $table): ?>

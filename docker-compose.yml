@@ -43,8 +43,8 @@ services:
       - "${PHPMYADMIN_PORT:-8080}:80"
     environment:
       PMA_HOST: ${DB_HOST:-root_db}
-      PMA_USER: ${DB_USER:-root}
-      PMA_PASSWORD: ${DB_PASSWORD:-password}
+      PMA_USER: ${PMA_USER:-root}
+      PMA_PASSWORD: ${PMA_PASSWORD:-password}
       # PMA_ABSOLUTE_URI: ${NC_PUBLIC_URL:-localhost}/phpmyadmin/
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-password}
     restart: always
@@ -62,4 +62,5 @@ services:
       MYSQL_USER: ${DB_USER:-root}
       MYSQL_PASSWORD: ${DB_PASSWORD:-password}
       MYSQL_DATABASE: ${DB_NAME:-nocodb}
+      BASE_PATH: ${PHP_BASE_PATH:-/}
     restart: always
