@@ -25,9 +25,11 @@ Ein einfacher SQL-Editor für NocoDB, mit dem Sie SQL-Abfragen direkt gegen die 
    cd nocodb-sql-editor
    ```
 
-2. Docker Compose-Konfiguration anpassen (optional):
-   Die Datei `docker-compose.yml` enthält bereits alle nötigen Einstellungen.
-   Sie können Benutzernamen, Passwörter und andere Parameter anpassen.
+2. Umgebungsvariablen konfigurieren (optional):
+   ```bash
+   cp .env.example .env
+   # Bearbeiten Sie .env nach Bedarf
+   ```
 
 3. Docker-Container starten:
    ```bash
@@ -35,66 +37,131 @@ Ein einfacher SQL-Editor für NocoDB, mit dem Sie SQL-Abfragen direkt gegen die 
    ```
 
 4. Auf die Anwendungen zugreifen:
-    - NocoDB: http://localhost:80
-    - SQL Editor: http://localhost:8081
-    - phpMyAdmin: http://localhost:8080
+    - **NocoDB**: http://localhost/
+    - **SQL Editor**: http://localhost/sql/
+    - **phpMyAdmin**: http://localhost/phpmyadmin/
 
+   Falls Port 80 bereits belegt ist, können Sie in der `.env`-Datei einen anderen Port setzen:
+   ```bash
+   HTTP_PORT=8000
+   ```
+   Dann wäre der Zugriff über http://localhost:8000/ möglich.
 
-5. Nginx-Konfiguration für Reverse Proxy
-   Wenn Sie einen Nginx-Server als Reverse Proxy verwenden möchten, können Sie die die Konfiguration aus `nginx.conf.example` verwenden. Nutzen Sie dazu in der `docker-compose.yml` die Enviroment-Variable `PMA_ABSOLUTE_URI`.
-   Dann können Sie so auf die Anwendung zugreifen:
-    - NocoDB: http://localhost
-    - SQL Editor: http://localhost/sql
-    - phpMyAdmin: http://localhost/phpmyadmin
-   
+### Architektur
+
+Das Setup verwendet **Traefik** als Reverse Proxy, der alle Services über den konfigurierbaren HTTP-Port bereitstellt:
+
+```
+Internet → Port ${HTTP_PORT} → Traefik → {
+  /           → NocoDB
+  /sql/       → SQL Editor
+  /phpmyadmin/ → phpMyAdmin
+}
+```
 
 ### Sicherheitseinstellungen
 
-Die Benutzerregistrierung kann auf zwei Arten deaktiviert werden:
+Die Benutzerregistrierung kann deaktiviert werden:
 
 1. **In der Docker-Konfiguration** ([Bug](https://github.com/nocodb/nocodb/issues/7814)):
-   ```yaml
-   environment:
-     NC_INVITE_ONLY_SIGNUP: 1
+   ```bash
+   # In .env setzen:
+   NC_INVITE_ONLY_SIGNUP=1
    ```
 
 2. **Über die NocoDB-Benutzeroberfläche**:
    - Melden Sie sich als Super-Admin an
-   - Gehen Sie zu "Account" → "Settings"
    - Deaktivieren Sie die Option "Enable Signup" 
    - Weitere Informationen: [NocoDB Dokumentation](https://docs.nocodb.com/account-settings/oss-specific-details/#enable--disable-signup)
 
 ### Umgebungsvariablen
 
-Die Anwendung verwendet Umgebungsvariablen für alle Konfigurationseinstellungen. Diese können in der `.env`-Datei definiert werden:
-
 | Variable | Beschreibung | Standardwert |
 | --- | --- | --- |
+| `HTTP_PORT` | Hauptport für Web-Zugriff | `80` |
+| `TRAEFIK_DASHBOARD_PORT` | Port für Traefik Dashboard | `8080` |
 | `DB_HOST` | Datenbankhost | `root_db` |
 | `DB_USER` | Datenbankbenutzer | `root` |
 | `DB_PASSWORD` | Datenbankpasswort | `password` |
 | `DB_NAME` | Datenbankname | `nocodb` |
-| `ADMIN_EMAIL` | Admin-E-Mail für NocoDB | `admin@example.com` |
-| `ADMIN_PASSWORD` | Admin-Passwort für NocoDB | `admin@example.com` |
-| `NOCODB_PORT` | Port für NocoDB | `80` |
-| `SQL_EDITOR_PORT` | Port für SQL Editor | `8081` |
-| `PHPMYADMIN_PORT` | Port für phpMyAdmin | `8080` |
-| `NC_PUBLIC_URL` | Öffentliche URL für NocoDB | `localhost` |
+| `NC_ADMIN_EMAIL` | Admin-E-Mail für NocoDB | `admin@example.com` |
+| `NC_ADMIN_PASSWORD` | Admin-Passwort für NocoDB | `admin@example.com` |
+| `NC_PUBLIC_URL` | Öffentliche URL für NocoDB | `http://localhost` |
 | `DATA_DIR` | Verzeichnis für persistente Daten | `./data` |
 
 ## Verwendung
 
-1. Öffnen Sie den SQL Editor unter http://localhost:8081
-2. Melden Sie sich mit Ihren NocoDB-Anmeldedaten an
-3. Wählen Sie ein Projekt aus
-4. Schreiben Sie SQL-Abfragen unter Verwendung der Tabellennamen aus NocoDB
-5. Führen Sie die Abfragen aus und sehen Sie die Ergebnisse
+1. Öffnen Sie NocoDB unter http://localhost/ und erstellen Sie einen Account
+2. Öffnen Sie den SQL Editor unter http://localhost/sql/
+3. Melden Sie sich mit Ihren NocoDB-Anmeldedaten an
+4. Wählen Sie ein Projekt aus
+5. Schreiben Sie SQL-Abfragen unter Verwendung der Tabellennamen aus NocoDB
+6. Führen Sie die Abfragen aus und sehen Sie die Ergebnisse
 
 ### Hinweise
 
 - Verwenden Sie die tatsächlichen **Tabellentitel** aus NocoDB in Ihren SQL-Abfragen (nicht die internen Tabellennamen)
 - Der Editor ersetzt automatisch die Tabellentitel durch die tatsächlichen Tabellennamen
 - Aus Sicherheitsgründen ist der Zugriff auf Systemtabellen (nc_*) nicht erlaubt
+
+## Updates durchführen
+
+```bash
+# Services stoppen
+docker-compose down
+
+# Neue Images ziehen
+docker-compose pull
+
+# Custom Images neu bauen
+docker-compose build --no-cache
+
+# Services starten
+docker-compose up -d
+```
+
+## Troubleshooting
+
+### Services prüfen
+```bash
+# Status aller Container
+docker-compose ps
+
+# Logs anzeigen
+docker-compose logs -f
+
+# Traefik Dashboard für Routing-Info
+# http://localhost:8080/
+```
+
+## Entwicklung
+
+### Projektstruktur
+```
+nocodb-sql-editor/
+├── docker-compose.yml    # Hauptkonfiguration mit Traefik
+├── .env.example         # Umgebungsvariablen-Vorlage
+├── php/
+│   └── Dockerfile       # PHP-Webserver für SQL Editor
+├── admin/               # PHP-Anwendung (SQL Editor)
+│   ├── index.php
+│   ├── header.php
+│   └── footer.php
+├── data/                # Persistente Daten (erstellt automatisch)
+└── README.md
+```
+
+### Lokale Entwicklung
+```bash
+# Für Entwicklung: Services im Vordergrund starten
+docker-compose up
+
+# Einzelne Services neu starten
+docker-compose restart sql-editor
+
+# Logs eines Services verfolgen
+docker-compose logs -f sql-editor
+```
 
 ## Mitwirken
 
