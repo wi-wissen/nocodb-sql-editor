@@ -79,7 +79,21 @@ function getProjectTables($projectId) {
         ORDER BY title
     ");
     $stmt->execute([$projectId]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $tables = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Fallback für Relationstabellen: Titel bereinigen
+    foreach ($tables as &$table) {
+        // Entferne Projekt-Präfix (z.B. nc_h4ry___)
+        $cleanTitle = preg_replace('/^nc_[a-zA-Z0-9]+___/', '', $table['title']);
+        
+        // Entferne m2m-Präfix für Many-to-Many Tabellen  
+        $cleanTitle = preg_replace('/^nc_/', '', $cleanTitle);
+        
+        // Überschreibe den title mit dem bereinigten Namen
+        $table['title'] = $cleanTitle;
+    }
+    
+    return $tables;
 }
 
 // Spaltennamen für eine Tabelle abrufen
